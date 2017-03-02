@@ -76,7 +76,19 @@ id_rsa.pub两个文件，这两个就是SSH Key的秘钥。注意这一步在一
 也可用https://github.com/xf110594639/gitskills.git地址代替git@github.com:xf110594639/gitskills.git
 Git支持多种协议，默认的git://使用ssh，但也可以使用https等其他协议。
 
+描述:从远端仓库下载新分支与数据
 
+1.git fetch 用来从一远端仓库更新
+
+2.git pull 该命令相当于git fetch + git merge
+
+*
+**
+***
+日期：2017.3.2
+描述：对比这次提交和上次提交生成补丁文件
+
+1.git format-patch -s HEAD^..HEAD  -s参数是补丁文件中添加作者，符号'^'可以被替换成'~n'n是数字表示生成最近提交n次的n个补丁文件
 
 
 
