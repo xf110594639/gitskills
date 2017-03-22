@@ -29,8 +29,20 @@ TIM_HandleTypeDef htim16;
 TIM_HandleTypeDef htim16;
 #endif
 
+/*
+配置定时器为定时输出波形功能，使用MX_TIM16_Init()
+配置定时器为输出PWM波形功能，使用MX_TIM17_Init()
+配置定时器2的pwm输入捕获功能，使用MX_TIM2_Init()
+配置定时器2的单通道输入捕获功能，使用MX_TIM2_Init()
 
+*/
 
+/*
+定时器多种输出配置集合函数
+-------------------------------------------------------------------------
+                      定时输出配置
+-------------------------------------------------------------------------
+*/
 
 /* TIM16 init function
 使用定时器16的输出比较模式输出波形
@@ -166,3 +178,150 @@ static void MX_TIM17_Init(void)
   HAL_TIM_MspPostInit(&htim17);
 
 }
+
+/*
+定时器多种输入捕获配置集合函数
+-------------------------------------------------------------------------
+                      定时输入捕获配置
+-------------------------------------------------------------------------
+*/
+
+/* 
+使用定时器2的pwm输入捕获功能，此模式需要通道1与通道2联合使用，
+并且其中一个通道捕获事件同时作为触发事件使计数器重加载
+定时器的通道2用于测量波形周期，通道1用于测量占空比
+ */
+static void MX_TIM2_Init(void)
+{
+
+  TIM_SlaveConfigTypeDef sSlaveConfig;
+  TIM_IC_InitTypeDef sConfigIC;
+  //TIM_MasterConfigTypeDef sMasterConfig;
+	
+	htim2.Instance = TIM2;
+	/* Initialize TIM2 peripheral as follows:
+       + Period = 0xFFFF
+       + Prescaler = 0
+       + ClockDivision = 0
+       + Counter direction = Up
+  */	
+	htim2.Init.Period = 65535;
+  htim2.Init.Prescaler = 0;
+	htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+//  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_IC_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+	/*##-2- Configure the Input Capture channels ###############################*/
+  /* 通道1对下降沿敏感，接收TI2FP1信号*/
+	sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0;
+	
+	sConfigIC.ICPolarity = TIM_ICPOLARITY_FALLING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+	if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+	/*通道2对上升沿敏感，接收TI2FP2信号*/
+	sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+	
+	/*##-3- Configure the slave mode ###########################################*/
+  /* 选择从模式，采用复位模式，上升沿触发，触发信号TI2FP2  */
+  sSlaveConfig.SlaveMode = TIM_SLAVEMODE_RESET;
+  sSlaveConfig.InputTrigger = TIM_TS_TI2FP2;
+  sSlaveConfig.TriggerPolarity = TIM_TRIGGERPOLARITY_NONINVERTED;
+  sSlaveConfig.TriggerPrescaler = TIM_TRIGGERPRESCALER_DIV1;
+  sSlaveConfig.TriggerFilter = 0;
+  if (HAL_TIM_SlaveConfigSynchronization(&htim2, &sSlaveConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+	/*##-4- Start the Input Capture in interrupt mode ##########################*/
+  if (HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
+  {
+    /* Starting Error */
+    Error_Handler();
+  }
+
+  /*##-5- Start the Input Capture in interrupt mode ##########################*/
+  if (HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1) != HAL_OK)
+  {
+    /* Starting Error */
+    Error_Handler();
+  }
+}
+
+
+/* TIM2 init function 
+定时器的通道2，通道3用于输入捕获模式
+*/
+static void MX_TIM2_Init(void)
+{
+
+  TIM_IC_InitTypeDef sConfigIC;
+  //TIM_MasterConfigTypeDef sMasterConfig;
+	
+	htim2.Instance = TIM2;
+	/* Initialize TIM2 peripheral as follows:
+       + Period = 0xFFFF
+       + Prescaler = 0
+       + ClockDivision = 0
+       + Counter direction = Up
+  */	
+	htim2.Init.Period = 3999;//计数器溢出周期4000us
+  htim2.Init.Prescaler = 47;//分频后计数器频率1MHZ
+	htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+//  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_IC_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+	/*##-2- Configure the Input Capture channels ###############################*/
+		/*通道2对下降沿敏感，接收TI2FP2信号*/
+	sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0xf;//8次采样电平一致认为是一个正确的边沿
+	sConfigIC.ICPolarity = TIM_ICPOLARITY_FALLING;//TIM_ICPOLARITY_RISING
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+	
+	/*##-3- Configure the Input Capture channels ###############################*/
+		/*通道3对下降沿敏感，接收TI3FP3信号*/
+	sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0xf;//8次采样电平一致认为是一个正确的边沿
+	sConfigIC.ICPolarity = TIM_ICPOLARITY_FALLING;//TIM_ICPOLARITY_RISING
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+	
+	/*##-4- Start the Input Capture in interrupt mode ##########################*/
+  if (HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
+  {
+    /* Starting Error */
+    Error_Handler();
+  }
+	
+	 if (HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_3) != HAL_OK)
+  {
+    /* Starting Error */
+    Error_Handler();
+  }
+
+}
+
