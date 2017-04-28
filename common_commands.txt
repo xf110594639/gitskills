@@ -101,12 +101,18 @@ Git支持多种协议，默认的git://使用ssh，但也可以使用https等其
 例子：
 #这是注释行 --被忽略
 *.a       #忽略所有以.a为扩展名的文件。
-!.a       #但是lib.a文件或目录不要忽略，即使前面设置了对*.a的忽略。
+!lib.a       #但是lib.a文件或目录不要忽略，即使前面设置了对*.a的忽略。
 /TODO     #只忽略此目录下的TODO文件，子目录的TODO文件不忽略。
 build/    #忽略所有build/目录下的文件。
 doc/*.txt #忽略文件如doc/notes.txt，但是文件如doc/server/arch.txt不被忽略。
 
+*
+**
+***
+日期：2017.4.27
+描述：显示提交日志加强版
 
+1.git log --graph --pretty=oneline --abbrev-commit graph参数是图形化，pretty=oneline参数在一行中显示 abbrev(abbreviation)参数是采用缩写
 
 
 
