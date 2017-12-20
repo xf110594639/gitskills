@@ -115,6 +115,14 @@ doc/*.txt #忽略文件如doc/notes.txt，但是文件如doc/server/arch.txt不�
 
 1.git log --graph --pretty=oneline --abbrev-commit graph参数是图形化，pretty=oneline参数在一行中显示 abbrev(abbreviation)参数是采用缩写
 
+*
+**
+***
+日期：2017.12.20
+描述：打补丁命令，用git format-patch生成一个patch，补丁名0001-test-patch.patch
+
+1.git am 0001-test-patch.patch
+
 
 
 
