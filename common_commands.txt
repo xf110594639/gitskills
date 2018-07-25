@@ -123,7 +123,12 @@ doc/*.txt #忽略文件如doc/notes.txt，但是文件如doc/server/arch.txt不�
 
 1.git am 0001-test-patch.patch
 
-
+*
+**
+***
+日期：2018.7.25
+描述：文件重命名(git-mv Move or rename a file, a directory,or a symlink) 格式：git mv<options>...<args>...
+用git mv a.c b.c
 
 
 
